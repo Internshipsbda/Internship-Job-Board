@@ -7,25 +7,64 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: transparent; /* keeps Squarespace background clear */
+      background: #f8f9fb;
       margin: 0;
       padding: 20px;
     }
-    h1 { text-align: center; }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    select, input[type="text"] {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 150px;
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 20px;
+      padding: 10px;
     }
     .card {
       background: white;
       border-radius: 12px;
       padding: 20px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      cursor: pointer;
       transition: transform 0.2s;
     }
-    .card:hover { transform: scale(1.02); }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .card p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .tags {
+      margin: 10px 0;
+    }
+    .tag {
+      display: inline-block;
+      background: #eee;
+      padding: 4px 10px;
+      margin: 2px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
     .apply-btn {
       display: inline-block;
       background: #ff914d;
@@ -34,109 +73,112 @@
       text-decoration: none;
       border-radius: 6px;
       font-weight: bold;
+      margin-top: 10px;
     }
     .apply-btn:hover {
       background: #e56f26;
-    }
-    /* Sidebar styles */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      right: -420px; /* hidden off screen */
-      width: 400px;
-      height: 100%;
-      background: white;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
-      padding: 20px;
-      overflow-y: auto;
-      transition: right 0.4s ease-in-out; /* smooth slide */
-      z-index: 1001;
-    }
-    .sidebar.open { right: 0; }
-    .sidebar h2 { margin-top: 0; }
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 22px;
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      cursor: pointer;
-    }
-    /* Overlay */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #D1DBE0; /* your color */
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 1000;
-    }
-    .overlay.show {
-      opacity: 0.9;
-      pointer-events: auto;
     }
   </style>
 </head>
 <body>
 
   <h1>Internship Opportunities</h1>
-  <div class="grid" id="jobGrid"></div>
 
-  <!-- Overlay -->
-  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
-  <!-- Sidebar -->
-  <div class="sidebar" id="jobSidebar">
-    <button class="close-btn" onclick="closeSidebar()">×</button>
-    <div id="sidebarContent"></div>
+  <!-- Filters -->
+  <div class="filters">
+    <select id="industryFilter">
+      <option value="">Industry</option>
+    </select>
+    <select id="locationFilter">
+      <option value="">Location</option>
+    </select>
+    <select id="paidFilter">
+      <option value="">Paid/Unpaid</option>
+      <option value="Yes">Paid</option>
+      <option value="No">Unpaid</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="Search...">
   </div>
+
+  <!-- Job Grid -->
+  <div class="grid" id="jobGrid"></div>
 
   <script>
     async function loadJobs() {
       const res = await fetch("jobs.json");
       const jobs = await res.json();
       const jobGrid = document.getElementById("jobGrid");
-      const sidebar = document.getElementById("jobSidebar");
-      const sidebarContent = document.getElementById("sidebarContent");
-      const overlay = document.getElementById("overlay");
 
-      jobs.forEach(job => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h3>${job.Title || "Untitled"}</h3>
-          <p><strong>${job.Company || ""}</strong></p>
-          <p>${job.Location || ""}</p>
-        `;
-        card.addEventListener("click", () => {
-          sidebarContent.innerHTML = `
-            <h2>${job.Title || ""}</h2>
-            <p><strong>Company:</strong> ${job.Company || ""}</p>
-            <p><strong>Location:</strong> ${job.Location || ""}</p>
-            <p><strong>Industry:</strong> ${job.Industry || ""}</p>
-            <p><strong>Paid:</strong> ${job.Paid || ""}</p>
-            <p><strong>Deadline:</strong> ${job.ApplicationDeadline || ""}</p>
-            <p><strong>Description:</strong><br>${job.JobDescription || ""}</p>
-            <a href="${job.LinktoApply || "#"}" target="_blank" class="apply-btn">Apply Now</a>
-          `;
-          sidebar.classList.add("open");
-          overlay.classList.add("show");
-        });
-        jobGrid.appendChild(card);
+      // Populate filter dropdowns
+      const industries = [...new Set(jobs.map(j => j.Industry))];
+      const locations = [...new Set(jobs.map(j => j.Location))];
+      const industryFilter = document.getElementById("industryFilter");
+      const locationFilter = document.getElementById("locationFilter");
+
+      industries.forEach(ind => {
+        if(ind) {
+          let opt = document.createElement("option");
+          opt.value = ind;
+          opt.textContent = ind;
+          industryFilter.appendChild(opt);
+        }
       });
-    }
+      locations.forEach(loc => {
+        if(loc) {
+          let opt = document.createElement("option");
+          opt.value = loc;
+          opt.textContent = loc;
+          locationFilter.appendChild(opt);
+        }
+      });
 
-    function closeSidebar() {
-      document.getElementById("jobSidebar").classList.remove("open");
-      document.getElementById("overlay").classList.remove("show");
+      // Render jobs
+      function renderJobs() {
+        const industryVal = industryFilter.value.toLowerCase();
+        const locationVal = locationFilter.value.toLowerCase();
+        const paidVal = document.getElementById("paidFilter").value;
+        const searchVal = document.getElementById("searchBox").value.toLowerCase();
+
+        jobGrid.innerHTML = "";
+
+        jobs.filter(job => {
+          return (
+            (!industryVal || (job.Industry && job.Industry.toLowerCase().includes(industryVal))) &&
+            (!locationVal || (job.Location && job.Location.toLowerCase().includes(locationVal))) &&
+            (!paidVal || job.Paid === paidVal) &&
+            (!searchVal || 
+              (job.Title && job.Title.toLowerCase().includes(searchVal)) || 
+              (job.Company && job.Company.toLowerCase().includes(searchVal)))
+          );
+        }).forEach(job => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${job.Title || "Untitled Role"}</h3>
+            <p><strong>${job.Company || "Unknown Company"}</strong></p>
+            <p>${job.Location || ""}</p>
+            <div class="tags">
+              ${job.Industry ? `<span class="tag">${job.Industry}</span>` : ""}
+              ${job.Paid ? `<span class="tag">${job.Paid === "Yes" ? "Paid" : "Unpaid"}</span>` : ""}
+            </div>
+            <a href="${job.LinktoApply || "#"}" class="apply-btn" target="_blank">Apply Now</a>
+          `;
+          jobGrid.appendChild(card);
+        });
+      }
+
+      // Initial render
+      renderJobs();
+
+      // Update on filter/search
+      industryFilter.addEventListener("change", renderJobs);
+      locationFilter.addEventListener("change", renderJobs);
+      document.getElementById("paidFilter").addEventListener("change", renderJobs);
+      document.getElementById("searchBox").addEventListener("input", renderJobs);
     }
 
     loadJobs();
   </script>
+
 </body>
 </html>
