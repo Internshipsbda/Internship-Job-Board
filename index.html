@@ -1,89 +1,106 @@
-
-<p id="last-updated" style="text-align:center; color:gray; font-size:14px;">
-  Last updated: loading...
-</p>
-<div id="job-list"></div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internship Opportunities</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .job-card { border: 1px solid #ccc; padding: 15px; margin: 10px; cursor: pointer; }
-    .sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100%; background: #f9f9f9; 
-               box-shadow: -2px 0 5px rgba(0,0,0,0.3); padding: 20px; transition: right 0.3s; overflow-y: auto; }
-    .sidebar.active { right: 0; }
-    .close-btn { float: right; cursor: pointer; font-weight: bold; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    select, input[type="text"] {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 150px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 10px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .card p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .tags {
+      margin: 10px 0;
+    }
+    .tag {
+      display: inline-block;
+      background: #eee;
+      padding: 4px 10px;
+      margin: 2px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+    .apply-btn {
+      display: inline-block;
+      background: #ff914d;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
- 
-  <div id="jobs"></div>
 
-  <div id="sidebar" class="sidebar">
-    <span class="close-btn" onclick="closeSidebar()">✖</span>
-    <div id="jobDetails"></div>
-    <button id="applyBtn">Apply Now</button>
+  <h1>Internship Opportunities</h1>
+
+  <div class="filters">
+    <select id="industryFilter">
+      <option value="">Industry</option>
+    </select>
+    <select id="locationFilter">
+      <option value="">Location</option>
+    </select>
+    <select id="paidFilter">
+      <option value="">Paid/Unpaid</option>
+      <option value="Yes">Paid</option>
+      <option value="No">Unpaid</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="Search...">
   </div>
+
+  <div class="grid" id="jobGrid"></div>
 
   <script>
     async function loadJobs() {
-      const response = await fetch('jobs.json');
-      async function loadJobs() {
-  const response = await fetch('jobs.json');
-  const jobs = await response.json();
+      const res = await fetch("jobs.json");
+      const jobs = await res.json();
+      const jobGrid = document.getElementById("jobGrid");
 
-  // Update "Last Updated" timestamp
-  const now = new Date();
-  document.getElementById('last-updated').innerText =
-    "Last updated: " + now.toLocaleString();
-
-  const jobList = document.getElementById('job-list');
-  jobList.innerHTML = '';
-  
-  jobs.forEach(job => {
-    const card = document.createElement('div');
-    card.className = 'job-card';
-    card.innerHTML = `
-      <h3>${job.Title}</h3>
-      <p><strong>Company:</strong> ${job.Company}</p>
-      <p><strong>Location:</strong> ${job.Location}</p>
-    `;
-    card.addEventListener('click', () => showDetails(job));
-    jobList.appendChild(card);
-  });
-}
-
-      const jobs = await response.json();
-      const container = document.getElementById('jobs');
-
-      jobs.forEach(job => {
-        let card = document.createElement('div');
-        card.className = 'job-card';
-        card.innerHTML = `<h3>${job.Title}</h3><p>${job.CompanyName} – ${job.Location}</p>`;
-        card.onclick = () => openSidebar(job);
-        container.appendChild(card);
-      });
-    }
-
-    function openSidebar(job) {
-      document.getElementById('jobDetails').innerHTML = `
-        <h2>${job.Title}</h2>
-        <p><strong>Company:</strong> ${job.CompanyName}</p>
-        <p><strong>Location:</strong> ${job.Location}</p>
-        <p><strong>Deadline:</strong> ${job.ApplicationDeadline}</p>
-        <p>${job.JobDescription}</p>
-      `;
-      document.getElementById('applyBtn').onclick = () => window.open(job.LinktoApply, '_blank');
-      document.getElementById('sidebar').classList.add('active');
-    }
-
-    function closeSidebar() {
-      document.getElementById('sidebar').classList.remove('active');
-    }
-
-    loadJobs();
-  </script>
-</body>
-</html>
+      // Populate filter options dynamically
+      const industries = [...new Set(jobs.map(j => j.Industry))];
+      const locations = [...new Set(jobs.map(j => j.Location))];
+      const industryFilter = document.getElementById("industryFilter");
+      const locationFilter =
