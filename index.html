@@ -7,28 +7,11 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: transparent; /* clear background for Squarespace */
+      background: transparent; /* keeps Squarespace background clear */
       margin: 0;
       padding: 20px;
     }
     h1 { text-align: center; }
-
-    /* Filters */
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    select, input[type="text"] {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      min-width: 150px;
-    }
-
-    /* Grid + Cards */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -43,8 +26,6 @@
       transition: transform 0.2s;
     }
     .card:hover { transform: scale(1.02); }
-
-    /* Apply button */
     .apply-btn {
       display: inline-block;
       background: #ff914d;
@@ -54,9 +35,10 @@
       border-radius: 6px;
       font-weight: bold;
     }
-    .apply-btn:hover { background: #e56f26; }
-
-    /* Sidebar */
+    .apply-btn:hover {
+      background: #e56f26;
+    }
+    /* Sidebar styles */
     .sidebar {
       position: fixed;
       top: 0;
@@ -81,7 +63,6 @@
       right: 15px;
       cursor: pointer;
     }
-
     /* Overlay */
     .overlay {
       position: fixed;
@@ -89,7 +70,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: #D1DBE0;
+      background: #D1DBE0; /* your color */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.4s ease;
@@ -104,43 +85,6 @@
 <body>
 
   <h1>Internship Opportunities</h1>
-
-  <!-- Filter bar -->
-  <div class="filters">
-    <select id="industryFilter">
-      <option value="">Industry</option>
-      <option value="Insurance">Insurance</option>
-      <option value="Reinsurance">Reinsurance</option>
-      <option value="Consulting">Consulting</option>
-      <option value="Hospitality">Hospitality</option>
-      <option value="Tourism">Tourism</option>
-      <option value="Government">Government</option>
-      <option value="Technology">Technology</option>
-      <option value="Healthcare">Healthcare</option>
-      <option value="Education">Education</option>
-      <!-- Add all industries from your MS Form -->
-    </select>
-
-    <select id="locationFilter">
-      <option value="">Location</option>
-      <option value="City of Hamilton">City of Hamilton</option>
-      <option value="Pembroke">Pembroke</option>
-      <option value="St. George's">St. George's</option>
-      <option value="Devonshire">Devonshire</option>
-      <option value="Warwick">Warwick</option>
-      <!-- Add Bermuda parishes/locations used in MS Form -->
-    </select>
-
-    <select id="paidFilter">
-      <option value="">Paid/Unpaid</option>
-      <option value="Yes">Paid</option>
-      <option value="No">Unpaid</option>
-    </select>
-
-    <input type="text" id="searchBox" placeholder="Search...">
-  </div>
-
-  <!-- Job Grid -->
   <div class="grid" id="jobGrid"></div>
 
   <!-- Overlay -->
@@ -161,57 +105,30 @@
       const sidebarContent = document.getElementById("sidebarContent");
       const overlay = document.getElementById("overlay");
 
-      function renderJobs() {
-        const industryVal = document.getElementById("industryFilter").value;
-        const locationVal = document.getElementById("locationFilter").value;
-        const paidVal = document.getElementById("paidFilter").value;
-        const searchVal = document.getElementById("searchBox").value.toLowerCase();
-
-        jobGrid.innerHTML = "";
-
-        jobs.filter(job => {
-          return (
-            (!industryVal || job.Industry === industryVal) &&
-            (!locationVal || job.Location === locationVal) &&
-            (!paidVal || job.Paid === paidVal) &&
-            (!searchVal || 
-              (job.Title && job.Title.toLowerCase().includes(searchVal)) ||
-              (job.Company && job.Company.toLowerCase().includes(searchVal)))
-          );
-        }).forEach(job => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-            <h3>${job.Title || "Untitled"}</h3>
-            <p><strong>${job.Company || ""}</strong></p>
-            <p>${job.Location || ""}</p>
+      jobs.forEach(job => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${job.Title || "Untitled"}</h3>
+          <p><strong>${job.Company || ""}</strong></p>
+          <p>${job.Location || ""}</p>
+        `;
+        card.addEventListener("click", () => {
+          sidebarContent.innerHTML = `
+            <h2>${job.Title || ""}</h2>
+            <p><strong>Company:</strong> ${job.Company || ""}</p>
+            <p><strong>Location:</strong> ${job.Location || ""}</p>
+            <p><strong>Industry:</strong> ${job.Industry || ""}</p>
+            <p><strong>Paid:</strong> ${job.Paid || ""}</p>
+            <p><strong>Deadline:</strong> ${job.ApplicationDeadline || ""}</p>
+            <p><strong>Description:</strong><br>${job.JobDescription || ""}</p>
+            <a href="${job.LinktoApply || "#"}" target="_blank" class="apply-btn">Apply Now</a>
           `;
-          card.addEventListener("click", () => {
-            sidebarContent.innerHTML = `
-              <h2>${job.Title || ""}</h2>
-              <p><strong>Company:</strong> ${job.Company || ""}</p>
-              <p><strong>Location:</strong> ${job.Location || ""}</p>
-              <p><strong>Industry:</strong> ${job.Industry || ""}</p>
-              <p><strong>Paid:</strong> ${job.Paid || ""}</p>
-              <p><strong>Deadline:</strong> ${job.ApplicationDeadline || ""}</p>
-              <p><strong>Description:</strong><br>${job.JobDescription || ""}</p>
-              <a href="${job.LinktoApply || "#"}" target="_blank" class="apply-btn">Apply Now</a>
-            `;
-            sidebar.classList.add("open");
-            overlay.classList.add("show");
-          });
-          jobGrid.appendChild(card);
+          sidebar.classList.add("open");
+          overlay.classList.add("show");
         });
-      }
-
-      // Initial render
-      renderJobs();
-
-      // Re-render on filter change
-      document.getElementById("industryFilter").addEventListener("change", renderJobs);
-      document.getElementById("locationFilter").addEventListener("change", renderJobs);
-      document.getElementById("paidFilter").addEventListener("change", renderJobs);
-      document.getElementById("searchBox").addEventListener("input", renderJobs);
+        jobGrid.appendChild(card);
+      });
     }
 
     function closeSidebar() {
