@@ -109,6 +109,13 @@
 </head>
 <body>
 
+<h1>Internship Opportunities</h1>
+
+<!-- Last Updated -->
+<p id="lastUpdated" style="text-align:center; color:#555; font-size:0.9rem; margin-bottom:15px;">
+  Last updated: loading...
+</p>
+
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
   <button id="closeSidebar">&times;</button>
@@ -140,6 +147,10 @@
     const jobs = await res.json();
     const jobGrid = document.getElementById("jobGrid");
 
+    // Update last updated timestamp
+    document.getElementById("lastUpdated").textContent =
+      "Last updated: " + new Date().toLocaleString();
+
     // Populate filter dropdowns
     const industries = [...new Set(jobs.map(j => j.Industry))];
     const locations = [...new Set(jobs.map(j => j.Location))];
@@ -164,73 +175,4 @@
     });
 
     // Render jobs
-    function renderJobs() {
-      const industryVal = industryFilter.value.toLowerCase();
-      const locationVal = locationFilter.value.toLowerCase();
-      const paidVal = document.getElementById("paidFilter").value;
-      const searchVal = document.getElementById("searchBox").value.toLowerCase();
-
-      jobGrid.innerHTML = "";
-
-      jobs.filter(job => {
-        return (
-          (!industryVal || (job.Industry && job.Industry.toLowerCase().includes(industryVal))) &&
-          (!locationVal || (job.Location && job.Location.toLowerCase().includes(locationVal))) &&
-          (!paidVal || job.Paid === paidVal) &&
-          (!searchVal || 
-            (job.Title && job.Title.toLowerCase().includes(searchVal)) || 
-            (job.Company && job.Company.toLowerCase().includes(searchVal)))
-        );
-      }).forEach(job => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h3>${job.Title || "Untitled Role"}</h3>
-          <p><strong>${job.Company || "Unknown Company"}</strong></p>
-          <p>${job.Location || ""}</p>
-          <div class="tags">
-            ${job.Industry ? `<span class="tag">${job.Industry}</span>` : ""}
-            ${job.Paid ? `<span class="tag">${job.Paid === "Yes" ? "Paid" : "Unpaid"}</span>` : ""}
-          </div>
-        `;
-
-        // Click → open sidebar
-        card.addEventListener("click", () => {
-          const sidebar = document.getElementById("sidebar");
-          const sidebarContent = document.getElementById("sidebarContent");
-          sidebarContent.innerHTML = `
-            <h2>${job.Title || "Untitled Role"}</h2>
-            <p><strong>${job.Company || "Unknown Company"}</strong></p>
-            <p><strong>Location:</strong> ${job.Location || ""}</p>
-            <p><strong>Industry:</strong> ${job.Industry || ""}</p>
-            <p><strong>Paid:</strong> ${job.Paid || ""}</p>
-            <p><strong>Description:</strong> ${job.JobDescription || "No description provided."}</p>
-            <a href="${job.LinktoApply || "#"}" class="apply-btn" target="_blank">Apply Now</a>
-          `;
-          sidebar.classList.add("show");
-        });
-
-        jobGrid.appendChild(card);
-      });
-    }
-
-    // Close button
-    document.getElementById("closeSidebar").addEventListener("click", () => {
-      document.getElementById("sidebar").classList.remove("show");
-    });
-
-    // Initial render
-    renderJobs();
-
-    // Update on filter/search
-    industryFilter.addEventListener("change", renderJobs);
-    locationFilter.addEventListener("change", renderJobs);
-    document.getElementById("paidFilter").addEventListener("change", renderJobs);
-    document.getElementById("searchBox").addEventListener("input", renderJobs);
-  }
-
-  loadJobs();
-</script>
-
-</body>
-</html>
+    f
