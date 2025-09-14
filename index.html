@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Internship Opportunities</title>
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,7 +40,6 @@
       padding: 20px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       transition: transform 0.2s;
-      cursor: pointer;
     }
     .card:hover {
       transform: scale(1.02);
@@ -79,100 +78,128 @@
     .apply-btn:hover {
       background: #e56f26;
     }
-
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 400px;
-      height: 100%;
-      background: #fff;
-      box-shadow: -3px 0 10px rgba(0,0,0,0.2);
-      padding: 20px;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-      transform: translateX(100%);
-      z-index: 1000;
-    }
-    .sidebar.show {
-      transform: translateX(0);
-    }
-    #closeSidebar {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      float: right;
-    }
   </style>
 </head>
 <body>
 
-<h1>Internship Opportunities</h1>
-
-<!-- Last Updated -->
-<p id="lastUpdated" style="text-align:center; color:#555; font-size:0.9rem; margin-bottom:15px;">
+<p id="last-updated" style="text-align:center; color:gray; font-size:14px;">
   Last updated: loading...
 </p>
+<div id="job-list"></div>
+  <!-- Filters -->
+  <div class="filters">
+    <select id="industryFilter">
+      <option value="">Industry</option>
+    </select>
+    <select id="locationFilter">
+      <option value="">Location</option>
+    </select>
+    <select id="paidFilter">
+      <option value="">Paid/Unpaid</option>
+      <option value="Yes">Paid</option>
+      <option value="No">Unpaid</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="Search...">
+  </div>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-  <button id="closeSidebar">&times;</button>
-  <div id="sidebarContent"></div>
-</div>
+  <!-- Job Grid -->
+  <div class="grid" id="jobGrid"></div>
 
-<!-- Filters -->
-<div class="filters">
-  <select id="industryFilter">
-    <option value="">Industry</option>
-  </select>
-  <select id="locationFilter">
-    <option value="">Location</option>
-  </select>
-  <select id="paidFilter">
-    <option value="">Paid/Unpaid</option>
-    <option value="Yes">Paid</option>
-    <option value="No">Unpaid</option>
-  </select>
-  <input type="text" id="searchBox" placeholder="Search...">
-</div>
+  <script>
+    async function loadJobs() {
+      const res = await fetch("jobs.json");
+      const jobs = await res.json();
+      const jobGrid = document.getElementById("jobGrid");
+const now = new Date();
+  document.getElementById('last-updated').innerText =
+    "Last updated: " + now.toLocaleString();
 
-<!-- Job Grid -->
-<div class="grid" id="jobGrid"></div>
+  const jobList = document.getElementById('job-list');
+  jobList.innerHTML = '';
+  
+// Update "Last Updated" timestamp
+  jobs.forEach(job => {
+    const card = document.createElement('div');
+    card.className = 'job-card';
+    card.innerHTML = `
+      <h3>${job.Title}</h3>
+      <p><strong>Company:</strong> ${job.Company}</p>
+      <p><strong>Location:</strong> ${job.Location}</p>
+    `;
+    card.addEventListener('click', () => showDetails(job));
+    jobList.appendChild(card);
+  });
+}
+      // Populate filter dropdowns
+      const industries = [...new Set(jobs.map(j => j.Industry))];
+      const locations = [...new Set(jobs.map(j => j.Location))];
+      const industryFilter = document.getElementById("industryFilter");
+      const locationFilter = document.getElementById("locationFilter");
 
-<script>
-  async function loadJobs() {
-    const res = await fetch("jobs.json");
-    const jobs = await res.json();
-    const jobGrid = document.getElementById("jobGrid");
+      industries.forEach(ind => {
+        if(ind) {
+          let opt = document.createElement("option");
+          opt.value = ind;
+          opt.textContent = ind;
+          industryFilter.appendChild(opt);
+        }
+      });
+      locations.forEach(loc => {
+        if(loc) {
+          let opt = document.createElement("option");
+          opt.value = loc;
+          opt.textContent = loc;
+          locationFilter.appendChild(opt);
+        }
+      });
 
-    // Update last updated timestamp
-    document.getElementById("lastUpdated").textContent =
-      "Last updated: " + new Date().toLocaleString();
+      // Render jobs
+      function renderJobs() {
+        const industryVal = industryFilter.value.toLowerCase();
+        const locationVal = locationFilter.value.toLowerCase();
+        const paidVal = document.getElementById("paidFilter").value;
+        const searchVal = document.getElementById("searchBox").value.toLowerCase();
 
-    // Populate filter dropdowns
-    const industries = [...new Set(jobs.map(j => j.Industry))];
-    const locations = [...new Set(jobs.map(j => j.Location))];
-    const industryFilter = document.getElementById("industryFilter");
-    const locationFilter = document.getElementById("locationFilter");
+        jobGrid.innerHTML = "";
 
-    industries.forEach(ind => {
-      if(ind) {
-        let opt = document.createElement("option");
-        opt.value = ind;
-        opt.textContent = ind;
-        industryFilter.appendChild(opt);
+        jobs.filter(job => {
+          return (
+            (!industryVal || (job.Industry && job.Industry.toLowerCase().includes(industryVal))) &&
+            (!locationVal || (job.Location && job.Location.toLowerCase().includes(locationVal))) &&
+            (!paidVal || job.Paid === paidVal) &&
+            (!searchVal || 
+              (job.Title && job.Title.toLowerCase().includes(searchVal)) || 
+              (job.Company && job.Company.toLowerCase().includes(searchVal)))
+          );
+        }).forEach(job => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${job.Title || "Untitled Role"}</h3>
+            <p><strong>${job.Company || "Unknown Company"}</strong></p>
+            <p>${job.Location || ""}</p>
+            <div class="tags">
+              ${job.Industry ? `<span class="tag">${job.Industry}</span>` : ""}
+              ${job.Paid ? `<span class="tag">${job.Paid === "Yes" ? "Paid" : "Unpaid"}</span>` : ""}
+            </div>
+            <a href="${job.LinktoApply || "#"}" class="apply-btn" target="_blank">Apply Now</a>
+          `;
+          jobGrid.appendChild(card);
+        });
       }
-    });
-    locations.forEach(loc => {
-      if(loc) {
-        let opt = document.createElement("option");
-        opt.value = loc;
-        opt.textContent = loc;
-        locationFilter.appendChild(opt);
-      }
-    });
 
-    // Render jobs
-    f
+      // Initial render
+      renderJobs();
+
+      // Update on filter/search
+      industryFilter.addEventListener("change", renderJobs);
+      locationFilter.addEventListener("change", renderJobs);
+      document.getElementById("paidFilter").addEventListener("change", renderJobs);
+      document.getElementById("searchBox").addEventListener("input", renderJobs);
+    }
+
+    loadJobs();
+  </script>
+
+</body>
+</html>
