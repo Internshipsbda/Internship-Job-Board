@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internship Listings</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .job-card { border: 1px solid #ccc; padding: 15px; margin: 10px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100%; background: #f9f9f9; 
+               box-shadow: -2px 0 5px rgba(0,0,0,0.3); padding: 20px; transition: right 0.3s; overflow-y: auto; }
+    .sidebar.active { right: 0; }
+    .close-btn { float: right; cursor: pointer; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Internship Listings</h1>
+  <div id="jobs"></div>
+
+  <div id="sidebar" class="sidebar">
+    <span class="close-btn" onclick="closeSidebar()">✖</span>
+    <div id="jobDetails"></div>
+    <button id="applyBtn">Apply Now</button>
+  </div>
+
+  <script>
+    async function loadJobs() {
+      const response = await fetch('jobs.json');
+      const jobs = await response.json();
+      const container = document.getElementById('jobs');
+
+      jobs.forEach(job => {
+        let card = document.createElement('div');
+        card.className = 'job-card';
+        card.innerHTML = `<h3>${job.Title}</h3><p>${job.CompanyName} – ${job.Location}</p>`;
+        card.onclick = () => openSidebar(job);
+        container.appendChild(card);
+      });
+    }
+
+    function openSidebar(job) {
+      document.getElementById('jobDetails').innerHTML = `
+        <h2>${job.Title}</h2>
+        <p><strong>Company:</strong> ${job.CompanyName}</p>
+        <p><strong>Location:</strong> ${job.Location}</p>
+        <p><strong>Deadline:</strong> ${job.ApplicationDeadline}</p>
+        <p>${job.JobDescription}</p>
+      `;
+      document.getElementById('applyBtn').onclick = () => window.open(job.LinktoApply, '_blank');
+      document.getElementById('sidebar').classList.add('active');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('active');
+    }
+
+    loadJobs();
+  </script>
+</body>
+</html>
